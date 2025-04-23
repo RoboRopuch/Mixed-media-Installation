@@ -1,11 +1,11 @@
-// main.tsx
+// settings.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import {RangeProvider} from "./context.tsx";
+import {RangeProvider} from "../context.tsx";
+import SettingsPage from "../components/settingsPage/settingsPage.tsx";
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <RangeProvider>
-            <App />
+            <SettingsPage />
     </RangeProvider>
 );
