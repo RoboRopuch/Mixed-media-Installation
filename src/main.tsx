@@ -1,11 +1,10 @@
 // main.tsx
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import {RangeProvider} from "./context.tsx";
+import {RowProvider} from "./context.tsx";
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-    <RangeProvider>
+    <RowProvider>
             <App />
-    </RangeProvider>
+    </RowProvider>
 );

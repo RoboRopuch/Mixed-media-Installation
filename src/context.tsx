@@ -1,59 +1,48 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type Range = { min: number; max: number; probability: number };
+export type Row = {
+    id: string;
+    min: number;
+    max: number;
+    probability: number };
 
-type RangeContextType = {
-    ranges: Range[] | undefined;
-    setRanges: React.Dispatch<React.SetStateAction<Range[] | undefined>>;
-    isLoading: boolean;
-    error: string | null;
+type RowContextType = {
+    rows: Row[];
+    setRows: (rows: Row[]) => void;
 };
 
-const RangeContext = createContext<RangeContextType | null>(null);
+const RowContext = createContext<RowContextType | null>(null);
 
-const LOCAL_STORAGE_KEY = 'probability_ranges';
+const LOCAL_STORAGE_KEY = 'probability_rows';
 
-export const RangeProvider = ({ children }) => {
-    const [ranges, setRanges] = useState<Range[] | undefined>();
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+export const RowProvider = ({ children } : {children : React.ReactNode}) => {
+    const [rows, setRows] = useState<Row[]>([]);
 
     useEffect(() => {
         const local = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (local) {
-            setRanges(JSON.parse(local));
-            setIsLoading(false);
-        } else {
-            fetch("/probabilityRanges.json")
-                .then((res) => {
-                    if (!res.ok) throw new Error("Failed to load probability data");
-                    return res.json();
-                })
-                .then(data => {
-                    setRanges(data);
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-                })
-                .catch(err => setError(err.message))
-                .finally(() => setIsLoading(false));
+            setRows(JSON.parse(local));
         }
     }, []);
 
-    // Write to localStorage whenever ranges change
+    // Write to localStorage whenever Rows change
     useEffect(() => {
-        if (ranges) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(ranges));
+        if (rows.length === 0) {
+            return;
         }
-    }, [ranges]);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(rows));
+
+    }, [rows]);
 
     return (
-        <RangeContext.Provider value={{ ranges, setRanges, isLoading, error }}>
+        <RowContext.Provider value={{ rows, setRows }}>
             {children}
-        </RangeContext.Provider>
+        </RowContext.Provider>
     );
 };
 
-export const useRangeContext = () => {
-    const context = useContext(RangeContext);
-    if (!context) throw new Error("useRangeContext must be used within RangeProvider");
+export const useRowContext = () => {
+    const context = useContext(RowContext);
+    if (!context) throw new Error("useRowContext must be used within RowProvider");
     return context;
 };
