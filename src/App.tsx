@@ -1,18 +1,23 @@
 import { createMachine, assign } from 'xstate';
 import { useHotkeys } from "react-hotkeys-hook";
-import { useRef } from "react";
+import {useRef, useState} from "react";
 import "./App.scss";
 import {drawFromRanges} from "./utils/randomWIthCustomProbability.ts";
 import {useMachine} from "@xstate/react";
 import {useRowContext} from "./context.tsx";
+import {getItem, setItem} from "./utils/localStorage.ts";
 
 //delays
-const POST_BUTTON_PRESS_DELAY = 10 * 1000;
+const LONG_WELCOME_MESSAGE_TIME = 10 * 1000;
+const SHORT_WELCOME_MESSAGE_TIME = 5 * 1000;
 const POST_LOADING_DELAY = 10 * 1000;
 const POST_BEST_SCORE_DELAY = 15 * 1000;
 
 //messages
-const WELCOME_MESSAGE = "xPress is a new, high-tech system that calculates the total of human worth. Please stay still. The scanning will begin.";
+const WELCOME_MESSAGE1 = "xPress is a new, high-tech system that calculates the total of human worth.";
+const WELCOME_MESSAGE2 = "Please stay still.";
+const WELCOME_MESSAGE3 = "The scanning will begin.";
+
 const HOME_TITLE = "Welcome to xPress";
 const HOME_SUBTITLE = "Press to start";
 
@@ -27,12 +32,26 @@ const appMachine = createMachine({
     states: {
         home: {
             on: {
-                PRESS_SPACE: 'welcomeMessage'
+                PRESS_SPACE: 'welcomeMessage1'
             }
         },
-        welcomeMessage: {
+        welcomeMessage1: {
             after: {
-                [POST_BUTTON_PRESS_DELAY]: {
+                [LONG_WELCOME_MESSAGE_TIME]: {
+                    target: 'welcomeMessage2',
+                }
+            }
+        },
+        welcomeMessage2: {
+            after: {
+                [SHORT_WELCOME_MESSAGE_TIME]: {
+                    target: 'welcomeMessage3',
+                }
+            }
+        },
+        welcomeMessage3: {
+            after: {
+                [SHORT_WELCOME_MESSAGE_TIME]: {
                     target: 'loading',
                 }
             }
@@ -49,7 +68,7 @@ const appMachine = createMachine({
             after: {
                 [POST_LOADING_DELAY]: {
                     target: 'bestScores',
-                    actions: 'resetResult'
+                    actions: 'updateBestScores'
                 }
             }
         },
@@ -57,6 +76,7 @@ const appMachine = createMachine({
             after: {
                 [POST_BEST_SCORE_DELAY]: {
                     target: 'home',
+                    actions: 'resetResult'
                 }
             }
         }
@@ -65,6 +85,11 @@ const appMachine = createMachine({
 
 function App() {
     const { rows } = useRowContext();
+    const [bestScores, setBestScores] = useState<number[] | []>(() => {
+        const item = getItem('bestScores');
+        return item || [];
+    });
+
 
     const machineWithActions = appMachine.provide({
         actions: {
@@ -73,6 +98,15 @@ function App() {
             }),
             resetResult: assign({
                 result: () => null
+            }),
+            updateBestScores: assign(({ context }) => {
+                const updated = [...bestScores, context.result!]
+                    .sort((a, b) => b - a)
+                    .slice(0, 5);
+
+                setBestScores(updated);
+                setItem('bestScores', updated);
+                return { result: null };
             })
         }
     });
@@ -101,9 +135,19 @@ function App() {
                     <p>{HOME_SUBTITLE}</p>
                 </div>
             )}
-            {state.matches('welcomeMessage') && (
+            {state.matches('welcomeMessage1') && (
                 <div className="welcome-message">
-                    <p>{WELCOME_MESSAGE}</p>
+                    <p>{WELCOME_MESSAGE1}</p>
+                </div>
+            )}
+            {state.matches('welcomeMessage2') && (
+                <div className="welcome-message">
+                    <p>{WELCOME_MESSAGE2}</p>
+                </div>
+            )}
+            {state.matches('welcomeMessage3') && (
+                <div className="welcome-message">
+                    <p>{WELCOME_MESSAGE3}</p>
                 </div>
             )}
             {state.matches('loading') && (
@@ -123,6 +167,7 @@ function App() {
 
             {state.matches('result') && (
                 <div className="result-screen">
+                    <h1> Your score is </h1>
                     <h2 className="result-number">{state.context.result}</h2>
                 </div>
             )}
@@ -131,9 +176,7 @@ function App() {
                 <div className="best-scores">
                     <h1>BEST SCORES</h1>
                     <ol className="best-scores-list" >
-                        <li>1234</li>
-                        <li>23</li>
-                        <li>1</li>
+                        {bestScores && bestScores.map((score) => (<li>{score}</li>))}
                     </ol>
                 </div>
             )}
