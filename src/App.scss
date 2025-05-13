@@ -32,8 +32,6 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: none;
-
 }
 
 body {
@@ -52,6 +50,8 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+  cursor: none;
+
 
   .home-screen,
   .best-scores,
