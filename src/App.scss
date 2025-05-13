@@ -3,7 +3,7 @@ $off-white: #E2E2E2;
 @font-face {
   font-family: "FacadeGX";
   src: local("FacadeGX"),
-  url("./fonts/FacadeGX.ttf") format("truetype");
+  url("./fonts/PressStart2P-Regular.ttf") format("truetype");
 }
 
 @mixin title {
@@ -32,6 +32,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: none;
+
 }
 
 body {
@@ -66,8 +68,8 @@ body {
   }
 
   .best-scores {
-    flex-direction: row;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     gap: 5rem;
     flex-wrap: wrap;
   }
@@ -77,6 +79,12 @@ body {
   }
 
   .best-scores-list {
+    ol {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
     li {
       @include subtitle;
     }

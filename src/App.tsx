@@ -1,186 +1,93 @@
-import { createMachine, assign } from 'xstate';
-import { useHotkeys } from "react-hotkeys-hook";
-import {useRef, useState} from "react";
-import "./App.scss";
-import {drawFromRanges} from "./utils/randomWIthCustomProbability.ts";
-import {useMachine} from "@xstate/react";
-import {useRowContext} from "./context.tsx";
-import {getItem, setItem} from "./utils/localStorage.ts";
-
-//delays
-const LONG_WELCOME_MESSAGE_TIME = 10 * 1000;
-const SHORT_WELCOME_MESSAGE_TIME = 5 * 1000;
-const POST_LOADING_DELAY = 10 * 1000;
-const POST_BEST_SCORE_DELAY = 15 * 1000;
-
-//messages
-const WELCOME_MESSAGE1 = "xPress is a new, high-tech system that calculates the total of human worth.";
-const WELCOME_MESSAGE2 = "Please stay still.";
-const WELCOME_MESSAGE3 = "The scanning will begin.";
-
-const HOME_TITLE = "Welcome to xPress";
-const HOME_SUBTITLE = "Press to start";
-
-
-// Define the state machine
-const appMachine = createMachine({
-    id: 'xpress-app',
-    initial: 'home',
-    context: {
-        result: null as number | null
-    },
-    states: {
-        home: {
-            on: {
-                PRESS_SPACE: 'welcomeMessage1'
-            }
-        },
-        welcomeMessage1: {
-            after: {
-                [LONG_WELCOME_MESSAGE_TIME]: {
-                    target: 'welcomeMessage2',
-                }
-            }
-        },
-        welcomeMessage2: {
-            after: {
-                [SHORT_WELCOME_MESSAGE_TIME]: {
-                    target: 'welcomeMessage3',
-                }
-            }
-        },
-        welcomeMessage3: {
-            after: {
-                [SHORT_WELCOME_MESSAGE_TIME]: {
-                    target: 'loading',
-                }
-            }
-        },
-        loading: {
-            on: {
-                VIDEO_ENDED: {
-                    target: 'result',
-                    actions: 'generateResult'
-                }
-            }
-        },
-        result: {
-            after: {
-                [POST_LOADING_DELAY]: {
-                    target: 'bestScores',
-                    actions: 'updateBestScores'
-                }
-            }
-        },
-        bestScores: {
-            after: {
-                [POST_BEST_SCORE_DELAY]: {
-                    target: 'home',
-                    actions: 'resetResult'
-                }
-            }
-        }
-    }
-});
+import React, { useMemo, useState, useCallback } from 'react';
+import { useMachine } from '@xstate/react';
+import { useRowContext } from './context';
+import { getItem, setItem } from './utils/localStorage';
+import { drawFromRanges } from './utils/randomWIthCustomProbability';
+import { createAppMachine } from './machines/appMachine';
+import { HomeScreen } from './components/screens/HomeScreen';
+import { WelcomeScreen } from './components/screens/WelcomeScreen';
+import { LoadingScreen } from './components/screens/LoadingScreen';
+import { ResultScreen } from './components/screens/ResultScreen';
+import { BestScoresScreen } from './components/screens/BestScoresScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import {
+    WELCOME_MESSAGE1,
+    WELCOME_MESSAGE2,
+    WELCOME_MESSAGE3,
+} from './constants';
+import './App.scss';
 
 function App() {
     const { rows } = useRowContext();
-    const [bestScores, setBestScores] = useState<number[] | []>(() => {
-        const item = getItem('bestScores');
-        return item || [];
-    });
-
-
-    const machineWithActions = appMachine.provide({
-        actions: {
-            generateResult: assign({
-                result: () => drawFromRanges(rows)
-            }),
-            resetResult: assign({
-                result: () => null
-            }),
-            updateBestScores: assign(({ context }) => {
-                const updated = [...bestScores, context.result!]
-                    .sort((a, b) => b - a)
-                    .slice(0, 5);
-
-                setBestScores(updated);
-                setItem('bestScores', updated);
-                return { result: null };
-            })
+    const [bestScores, setBestScores] = useState<number[]>(() => {
+        try {
+            const item = getItem('bestScores');
+            return item || [];
+        } catch (error) {
+            console.error('Error loading best scores:', error);
+            return [];
         }
     });
+
+    const handleUpdateBestScores = useCallback((context: { result: number | null }) => {
+        try {
+            const updated = [...bestScores, context.result!]
+                .sort((a, b) => b - a)
+                .slice(0, 5);
+
+            setBestScores(updated);
+            setItem('bestScores', updated);
+            return { result: null };
+        } catch (error) {
+            console.error('Error updating best scores:', error);
+            return { result: null };
+        }
+    }, [bestScores]);
+
+    const machineWithActions = useMemo(() => createAppMachine({
+        generateResult: () => drawFromRanges(rows),
+        resetResult: () => null,
+        updateBestScores: handleUpdateBestScores
+    }), [rows, handleUpdateBestScores]);
 
     const [state, send] = useMachine(machineWithActions);
 
-    const videoRef = useRef(null);
-
-    const handleSpacebarPress = () => {
+    const handleSpacebarPress = useCallback(() => {
         if (state.matches('home')) {
-            send({ type: "PRESS_SPACE" }) ;
+            send({ type: 'PRESS_SPACE' });
         }
-    };
+    }, [state, send]);
 
-    const handleVideoEnded = () => {
-        send({ type: "VIDEO_ENDED" });
-    };
-
-    useHotkeys('space', handleSpacebarPress, { enableOnFormTags: ['input', 'select', 'textarea'] });
+    const handleVideoEnded = useCallback(() => {
+        send({ type: 'VIDEO_ENDED' });
+    }, [send]);
 
     return (
-        <div className="app-container">
-            {state.matches('home') && (
-                <div className="home-screen">
-                    <h1>{HOME_TITLE}</h1>
-                    <p>{HOME_SUBTITLE}</p>
-                </div>
-            )}
-            {state.matches('welcomeMessage1') && (
-                <div className="welcome-message">
-                    <p>{WELCOME_MESSAGE1}</p>
-                </div>
-            )}
-            {state.matches('welcomeMessage2') && (
-                <div className="welcome-message">
-                    <p>{WELCOME_MESSAGE2}</p>
-                </div>
-            )}
-            {state.matches('welcomeMessage3') && (
-                <div className="welcome-message">
-                    <p>{WELCOME_MESSAGE3}</p>
-                </div>
-            )}
-            {state.matches('loading') && (
-                <div className="loading-screen">
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        onEnded={handleVideoEnded}
-                        className="loading-video"
-                    >
-                        <source src="/loading_screen_nobackground_21-ezgif.com-gif-to-webm-converter.webm" type="video/webm" />
-                        Your browser does not support videos.
-                    </video>
-                </div>
-            )}
-
-            {state.matches('result') && (
-                <div className="result-screen">
-                    <h1> Your score is </h1>
-                    <h2 className="result-number">{state.context.result}</h2>
-                </div>
-            )}
-
-            {state.matches('bestScores') && (
-                <div className="best-scores">
-                    <h1>BEST SCORES</h1>
-                    <ol className="best-scores-list" >
-                        {bestScores && bestScores.map((score) => (<li>{score}</li>))}
-                    </ol>
-                </div>
-            )}
-        </div>
+        <ErrorBoundary>
+            <div className="app-container" role="application">
+                {state.matches('home') && (
+                    <HomeScreen onSpacePress={handleSpacebarPress} />
+                )}
+                {state.matches('welcomeMessage1') && (
+                    <WelcomeScreen message={WELCOME_MESSAGE1} />
+                )}
+                {state.matches('welcomeMessage2') && (
+                    <WelcomeScreen message={WELCOME_MESSAGE2} />
+                )}
+                {state.matches('welcomeMessage3') && (
+                    <WelcomeScreen message={WELCOME_MESSAGE3} />
+                )}
+                {state.matches('loading') && (
+                    <LoadingScreen onVideoEnded={handleVideoEnded} />
+                )}
+                {state.matches('result') && state.context.result !== null && (
+                    <ResultScreen result={state.context.result} />
+                )}
+                {state.matches('bestScores') && (
+                    <BestScoresScreen scores={bestScores} />
+                )}
+            </div>
+        </ErrorBoundary>
     );
 }
 
