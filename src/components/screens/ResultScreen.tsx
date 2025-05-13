@@ -12,12 +12,12 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ result }) => {
             aria-label="Result Screen"
         >
             <h1>Your score is</h1>
-            <h2 
+            <h1
                 className="result-number"
                 aria-label={`Score: ${result}`}
             >
                 {result}
-            </h2>
+            </h1>
         </div>
     );
 }; 
