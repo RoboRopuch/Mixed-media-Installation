@@ -10,7 +10,7 @@ import {
 type AppMachineActions = {
     generateResult: () => number;
     resetResult: () => null;
-    updateBestScores: (context: AppContext) => AppContext;
+    updateBestScores: (context: AppContext) => { result: number | null };
 };
 
 export const createAppMachine = (actions: AppMachineActions) => {
@@ -61,9 +61,11 @@ export const createAppMachine = (actions: AppMachineActions) => {
                 after: {
                     [POST_LOADING_DELAY]: {
                         target: 'bestScores',
-                        actions: assign((context) => ({
-                            result: actions.updateBestScores(context).result
-                        }))
+                        actions: [
+                            assign({
+                                result: () => null
+                            })
+                        ]
                     }
                 }
             },

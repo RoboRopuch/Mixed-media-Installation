@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useMachine } from '@xstate/react';
 import { useRowContext } from './context';
 import { getItem, setItem } from './utils/localStorage';
@@ -9,7 +9,6 @@ import { WelcomeScreen } from './components/screens/WelcomeScreen';
 import { LoadingScreen } from './components/screens/LoadingScreen';
 import { ResultScreen } from './components/screens/ResultScreen';
 import { BestScoresScreen } from './components/screens/BestScoresScreen';
-import { ErrorBoundary } from './components/ErrorBoundary';
 import {
     WELCOME_MESSAGE1,
     WELCOME_MESSAGE2,
@@ -63,7 +62,6 @@ function App() {
     }, [send]);
 
     return (
-        <ErrorBoundary>
             <div className="app-container" role="application">
                 {state.matches('home') && (
                     <HomeScreen onSpacePress={handleSpacebarPress} />
@@ -87,7 +85,6 @@ function App() {
                     <BestScoresScreen scores={bestScores} />
                 )}
             </div>
-        </ErrorBoundary>
     );
 }
 
