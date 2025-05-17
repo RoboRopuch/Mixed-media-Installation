@@ -1,6 +1,6 @@
-import { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useMachine } from '@xstate/react';
-import { useRowContext } from './context';
+import { useRowContext} from './context';
 import { getItem, setItem } from './utils/localStorage';
 import { drawFromRanges } from './utils/randomWIthCustomProbability';
 import { createAppMachine } from './machines/appMachine';
@@ -57,6 +57,18 @@ function App() {
         }
     }, [state, send]);
 
+    React.useEffect(() => {
+        const handleMouseClick = (event: MouseEvent) => {
+            if (event.button === 0) {
+                handleSpacebarPress()
+            }
+        };
+        window.addEventListener('mousedown', handleMouseClick);
+        return () => {
+            window.removeEventListener('mousedown', handleMouseClick);
+        };
+    }, [send]);
+
     const handleVideoEnded = useCallback(() => {
         send({ type: 'VIDEO_ENDED' });
     }, [send]);
@@ -64,7 +76,7 @@ function App() {
     return (
             <div className="app-container" role="application">
                 {state.matches('home') && (
-                    <HomeScreen onSpacePress={handleSpacebarPress} />
+                    <HomeScreen/>
                 )}
                 {state.matches('welcomeMessage1') && (
                     <WelcomeScreen message={WELCOME_MESSAGE1} />

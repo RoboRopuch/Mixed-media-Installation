@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import {getItem, setItem} from "./utils/localStorage.ts";
+import {PROBABILITY_RANGES_KEY} from "./constants.ts";
 
 export type Row = {
     id: string;
@@ -13,15 +15,16 @@ type RowContextType = {
 
 const RowContext = createContext<RowContextType | null>(null);
 
-const LOCAL_STORAGE_KEY = 'probability_rows';
 
 export const RowProvider = ({ children } : {children : React.ReactNode}) => {
-    const [rows, setRows] = useState<Row[]>([]);
+    const [rows, setRows] = useState<Row[]>([{id:'default', min: 1, max: 100, probability: 1 }]);
 
     useEffect(() => {
-        const local = localStorage.getItem(LOCAL_STORAGE_KEY);
+        const local = getItem(PROBABILITY_RANGES_KEY);
+        console.log(local);
+        console.log(typeof local);
         if (local) {
-            setRows(JSON.parse(local));
+            setRows(local);
         }
     }, []);
 
@@ -30,8 +33,7 @@ export const RowProvider = ({ children } : {children : React.ReactNode}) => {
         if (rows.length === 0) {
             return;
         }
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(rows));
-
+        setItem(PROBABILITY_RANGES_KEY, rows); // Pass rows array directly, without stringifying here
     }, [rows]);
 
     return (

@@ -6,18 +6,26 @@ $off-white: #E2E2E2;
   url("./fonts/PressStart2P-Regular.ttf") format("truetype");
 }
 
+@mixin text{
+  user-select: none;
+}
+
 @mixin title {
+  @include text;
   font-family: 'FacadeGX', serif;
   font-size: 5rem;
   color: $off-white;
   margin: 0;
+  line-height: 100px;
 }
 
 @mixin subtitle {
+  @include text;
   font-family: 'FacadeGX', serif;
   font-size: 3rem;
   color: $off-white;
   margin: 0;
+  line-height: 60px;
 }
 
 html, body {
@@ -58,6 +66,7 @@ body {
   .loading-screen,
   .result-screen,
   .welcome-message {
+    padding: 10rem;
     margin: auto; // This will center content vertically without enforcing full height
     display: flex;
     flex-direction: column;
@@ -68,7 +77,13 @@ body {
   }
 
   .result-screen {
-    gap: 10px
+    flex-direction: column;
+    align-items: center;
+    gap: 60px
+  }
+
+  .home-screen {
+    gap: 60px
   }
 
 
@@ -85,10 +100,10 @@ body {
 
   .best-scores-list {
     ol {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-column-gap: 300px;
+      column-gap: 300px;
     }
     li {
       @include subtitle;
@@ -116,7 +131,9 @@ body {
 
   .result-number {
     @include title;
-    font-size: 15rem;
+    line-height: unset;
+    font-size: 10rem;
+    text-decoration: underline;
   }
 }
 

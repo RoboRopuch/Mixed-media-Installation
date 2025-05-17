@@ -9,6 +9,8 @@ import PlusOneOutlinedIcon from "@mui/icons-material/PlusOneOutlined";
 import SaveIcon from "@mui/icons-material/Save";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import {setItem, wipeItem} from "../../utils/localStorage.ts";
+import {BEST_SCORES_KEY, PROBABILITY_RANGES_KEY} from "../../constants.ts";
 
 const uid = function() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -119,7 +121,7 @@ function SettingsPage() {
         }
 
         // Save to localStorage as an example
-        localStorage.setItem('probabilityDistribution', JSON.stringify(rows));
+        setItem(PROBABILITY_RANGES_KEY, rows);
 
         setUnsavedChanges(false);
         setSnackbar({
@@ -128,6 +130,10 @@ function SettingsPage() {
             severity: "success"
         });
     };
+
+    const handleWipeBestScores = () => {
+        wipeItem(BEST_SCORES_KEY);
+    }
 
     // Handle closing the snackbar
     const handleCloseSnackbar = () => {
@@ -219,6 +225,11 @@ function SettingsPage() {
                     disabled={!unsavedChanges}
                 >
                     Save Distribution
+                </Button>
+                <Button
+                    onClick={handleWipeBestScores}
+                >
+                    Clear best scores
                 </Button>
             </Stack>
 

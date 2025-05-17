@@ -6,11 +6,7 @@ interface BestScoresScreenProps {
 
 export const BestScoresScreen: React.FC<BestScoresScreenProps> = ({ scores }) => {
     return (
-        <div 
-            className="best-scores" 
-            role="status" 
-            aria-label="Best Scores Screen"
-        >
+        <div className="best-scores">
             <h1>HIGH SCORES</h1>
             <div className="best-scores-list" aria-label="List of best scores">
                 <ol >

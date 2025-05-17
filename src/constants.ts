@@ -12,3 +12,10 @@ export const WELCOME_MESSAGE3 = "The scanning will begin.";
 
 export const HOME_TITLE = `Welcome to ${APP_NAME}`;
 export const HOME_SUBTITLE = "Press to start";
+
+//local storage
+export const BEST_SCORES_KEY = 'bestScores';
+export const PROBABILITY_RANGES_KEY = 'probabilityDistribution';
+
+//general settings
+export const NUMBER_OF_BEST_SCORES = 10;
